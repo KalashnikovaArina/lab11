@@ -7,14 +7,8 @@
 #include <vector>
 #include "Header.h"
 
-Shape shape;
-Fill fill;
-std::vector<Vertex> verteces;
+ShaderType fill;
 Color u_color = { 1, 0, 0, 1 };
-std::vector<Color> gradient_colors;
-
-const GLfloat Pi = 3.14159274101257324219f;
-
 
 Vertex vertices[20] = {
     { -1.0f, 0.2f }, { -0.6f, 1.0f }, { -0.2f, 0.2f }, //TRIANGLE
@@ -23,7 +17,6 @@ Vertex vertices[20] = {
     {-1.0f, -0.5f}, {-0.57f,-0.2f}, {-0.14f,-0.5f}, {-0.3f, -1.0f}, {-0.83f, -1.0f}, {-1.0f, -0.5f} //PENTAGON
 };
 
-
 Color colors[24] = {
     {1.0f, 0.0f, 0.0f},
     {0.0f, 1.0f, 0.0f},
@@ -31,7 +24,7 @@ Color colors[24] = {
     {1.0f, 1.0f, 0.0f},
     {1.0f, 0.0f, 1.0f},
     {0.0f, 1.0f, 1.0f},
-    { 1.0f, 0.0f, 0.0f},
+    {1.0f, 0.0f, 0.0f},
     {0.0f, 1.0f, 0.0f},
     {0.0f, 0.0f, 1.0f},
     {1.0f, 1.0f, 0.0f},
@@ -51,12 +44,10 @@ Color colors[24] = {
     {0.0f, 1.0f, 1.0f}
 };
 
-int main() 
+int main()
 {
-    shape = Pentagon;
-    fill = Hardcode;
-
-    u_color = { 1, 0, 1, 1 };
+    fill = Static;
+    u_color = { 0, 1, 1, 1 };
 
 
     sf::Window window(sf::VideoMode(600, 600), "My OpenGL window", sf::Style::Default, sf::ContextSettings(24));
@@ -65,7 +56,7 @@ int main()
     glewInit();
 
     Init();
-    while (window.isOpen()) { 
+    while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed) { window.close(); break; }
@@ -73,7 +64,7 @@ int main()
             // Обработка ввода с клавиатуры
             else if (event.type == sf::Event::KeyPressed) {
                 if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space) {
-                    fill = static_cast<Fill>((fill + 1) % 3);
+                    fill = static_cast<ShaderType>((fill + 1) % 3);
                     Init();
                 }
                 else if (event.key.code == sf::Keyboard::Escape) {
@@ -87,7 +78,7 @@ int main()
         Draw();
         window.display();
     }
-    
+
     Release();
     return 0;
 }
@@ -95,19 +86,19 @@ int main()
 
 void InitVBO() {
     //создаем буфер
-	glGenBuffers(1, &VBO);
-	// Передаем вершины в буфер
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); //
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glGenBuffers(1, &VBO);
+    // Передаем вершины в буфер
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); //
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	glGenBuffers(1, &CBO);
-	glBindBuffer(GL_ARRAY_BUFFER, CBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glGenBuffers(1, &CBO);
+    glBindBuffer(GL_ARRAY_BUFFER, CBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	checkOpenGLerror(); //Пример функции есть в лабораторной
-	// Проверка ошибок OpenGL, если есть, то вывод в консоль тип ошибки
+    checkOpenGLerror(); //Пример функции есть в лабораторной
+    // Проверка ошибок OpenGL, если есть, то вывод в консоль тип ошибки
 }
 
 void InitShader() {
@@ -130,8 +121,9 @@ void InitShader() {
     GLuint fShader = glCreateShader(GL_FRAGMENT_SHADER);
     // Передаем исходный код
 
-    switch (fill) {
-    case Hardcode: glShaderSource(fShader, 1, &FragShaderSource, NULL); break;
+    switch (fill)
+    {
+    case Static: glShaderSource(fShader, 1, &FragShaderSource, NULL); break;
     case Uniform: glShaderSource(fShader, 1, &UniformFragShaderSource, NULL); break;
     case Gradient: glShaderSource(fShader, 1, &GradientFragShaderSource, NULL); break;
     default:break;
@@ -185,7 +177,7 @@ void Draw() {
 
     glEnableVertexAttribArray(Attrib_vertex); // Включаем массив атрибутов.
     //активируем буфер 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO); 
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // сообщаем OpenGL как он должен интерпретировать вершинные данные.
     glVertexAttribPointer(Attrib_vertex, 2, GL_FLOAT, GL_FALSE, 0, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0); // Отключаем VBO
@@ -200,11 +192,11 @@ void Draw() {
     }
 
     // Передаем данные на видеокарту(рисуем)
-        glDrawArrays(GL_TRIANGLES, 0, 3);              // Треугольник
-        glDrawArrays(GL_TRIANGLE_STRIP, 3, 4);         // Квадрат
-        glDrawArrays(GL_TRIANGLE_FAN, 7, 6);           // Веер
-        glDrawArrays(GL_POLYGON, 13, 6);               // Пятиугольник
-    
+    glDrawArrays(GL_TRIANGLES, 0, 3);              // Треугольник
+    glDrawArrays(GL_TRIANGLE_STRIP, 3, 4);         // Квадрат
+    glDrawArrays(GL_TRIANGLE_FAN, 7, 6);           // Веер
+    glDrawArrays(GL_POLYGON, 13, 6);               // Пятиугольник
+
 
     glDisableVertexAttribArray(Attrib_vertex); // Отключаем массив атрибутов
     if (fill == Gradient)
@@ -235,32 +227,26 @@ void Release() {
     ReleaseVBO();
 }
 
-std::vector<Color> GenerateColors(int n) {
-    std::vector<Color> res;
-    for (int i = 0; i < n; i++)
-        res.push_back({ (GLfloat)std::rand() / RAND_MAX, (GLfloat)std::rand() / RAND_MAX, (GLfloat)std::rand() / RAND_MAX, 1 });
 
-    return res;
-}
 
 void checkOpenGLerror()
 {
-	GLenum err;
-	if ((err = glGetError()) != GL_NO_ERROR)
-	{
-		std::cerr << "OpenGL Error Code: " << std::hex << err << std::dec << std::endl;
-	}
+    GLenum err;
+    if ((err = glGetError()) != GL_NO_ERROR)
+    {
+        std::cerr << "OpenGL Error Code: " << std::hex << err << std::dec << std::endl;
+    }
 }
 
 void ShaderLog(unsigned int shader)
 {
-	int infologLen = 0;
-	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infologLen);
-	if (infologLen > 1)
-	{
-		int charsWritten = 0;
-		std::vector<char> infoLog(infologLen);
-		glGetShaderInfoLog(shader, infologLen, &charsWritten, infoLog.data());
-		std::cout << "InfoLog: " << infoLog.data() << std::endl;
-	}
+    int infologLen = 0;
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infologLen);
+    if (infologLen > 1)
+    {
+        int charsWritten = 0;
+        std::vector<char> infoLog(infologLen);
+        glGetShaderInfoLog(shader, infologLen, &charsWritten, infoLog.data());
+        std::cout << "InfoLog: " << infoLog.data() << std::endl;
+    }
 }

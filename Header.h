@@ -25,15 +25,9 @@ struct Color {
     GLfloat a;
 };
 
-enum Shape {
-    Triangle,
-    Quadrangle,
-    Fan,
-    Pentagon
-};
 
-enum Fill {
-    Hardcode,
+enum ShaderType {
+    Static,
     Uniform,
     Gradient
 };
@@ -59,14 +53,13 @@ const char* GradientVertexShaderSource = R"(
  }
 )";
 
-//_________________________________________
 
 // Исходный код фрагментного шейдера
 const char* FragShaderSource = R"(
  #version 330 core
  out vec4 color;
  void main() {
-    color = vec4(1, 1, 0, 1);
+    color = vec4(1, 0, 0, 1);
  }
 )";
 
@@ -99,6 +92,5 @@ void Draw();
 void ReleaseVBO();
 void ReleaseShader();
 void Release();
-std::vector<Color> GenerateColors(int);
 
 #endif
